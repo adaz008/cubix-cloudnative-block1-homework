@@ -13,7 +13,9 @@ jobs:
       packages: write
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Set up JDK 21
       uses: actions/setup-java@v3
       with:
@@ -42,10 +44,14 @@ jobs:
       packages: write
     
     steps:
+      - name: Checkout code # Required for the DockerFile
+        uses: actions/checkout@v4
+
       - name: Download artifact from maven job
         uses: actions/download-artifact@v4
         with:
           name: java-app
+          path: target/
       
       - name: Logging in to Docker
         run: docker login ghcr.io -u adaz008 -p ${{ github.token }}
