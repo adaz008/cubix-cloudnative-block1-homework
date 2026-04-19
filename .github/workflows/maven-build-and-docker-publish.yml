@@ -6,7 +6,9 @@ on:
     - main
 
 jobs:
-  maven:
+  build:
+    name: "Build the app"
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,11 +35,11 @@ jobs:
         name: java-app
         path: '${{ github.workspace }}/target/*.jar'
 
-  build:
-    name: "Build with docker"
+  docker:
+    name: "Build docker image"
     
     runs-on: ubuntu-latest
-    needs: maven
+    needs: build
 
     permissions:
       contents: read
@@ -51,7 +53,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: java-app
-          path: target/
       
       - name: Logging in to Docker
         run: docker login ghcr.io -u adaz008 -p ${{ github.token }}
@@ -61,3 +62,26 @@ jobs:
 
       - name: Publishing the Docker image
         run: docker push ghcr.io/adaz008/cubix/1/homework/app:springboot
+
+  verify:
+    name: "Verify Docker image"
+
+    runs-on: ubuntu-latest
+    needs: docker
+
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code # Required for the verify-image.sh
+        uses: actions/checkout@v4
+
+      - name: Logging in to Docker
+        run: docker login ghcr.io -u adaz008 -p ${{ github.token }}
+
+      - name: Pull the Docker image
+        run: docker pull ghcr.io/adaz008/cubix/1/homework/app:springboot
+
+      - name: Verify the image
+        run: ./verify-image.sh
